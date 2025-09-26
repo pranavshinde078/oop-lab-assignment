@@ -1,0 +1,182 @@
+import java.util.Scanner;
+
+public class CircleDrawing {
+
+    static final int SIZE = 40;
+    static char[][] canvas = new char[SIZE][SIZE];
+
+    // Clear canvas
+    static void clearCanvas() {
+        for (int i = 0; i < SIZE; i++)
+            for (int j = 0; j < SIZE; j++)
+                canvas[i][j] = ' ';
+    }
+
+    // Print canvas
+    static void printCanvas() {
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++)
+                System.out.print(canvas[i][j]);
+            System.out.println();
+        }
+    }
+
+    // Plot pixel with style
+    // style: 0 = solid, 1 = dotted, 2 = dashed
+    static void plotPixel(int x, int y, int style, Counter count) {
+        if (x < 0 || x >= SIZE || y < 0 || y >= SIZE)
+            return;
+
+        boolean plot = false;
+        switch (style) {
+            case 0: // solid
+                plot = true;
+                break;
+            case 1: // dotted (plot every 2nd pixel)
+                if (count.value % 2 == 0)
+                    plot = true;
+                break;
+            case 2: // dashed (plot 5 pixels, skip 3 pixels)
+                if ((count.value % 8) < 5)
+                    plot = true;
+                break;
+        }
+
+        if (plot)
+            canvas[y][x] = 'O';
+        count.value++;
+    }
+
+    // Helper class to pass int by reference
+    static class Counter {
+        int value = 0;
+    }
+
+    // DDA circle algorithm
+    static void ddaCircle(int xc, int yc, int r, int style) {
+        clearCanvas();
+        Counter count = new Counter();
+
+        double step = 1.0 / r;
+        for (double theta = 0; theta <= 2 * Math.PI; theta += step) {
+            int x = (int) Math.round(xc + r * Math.cos(theta));
+            int y = (int) Math.round(yc + r * Math.sin(theta));
+            plotPixel(x, y, style, count);
+        }
+        printCanvas();
+    }
+
+    // Bresenham's circle algorithm
+    static void bresenhamCircle(int xc, int yc, int r, int style) {
+        clearCanvas();
+        Counter count = new Counter();
+
+        int x = 0, y = r;
+        int d = 3 - 2 * r;
+        while (x <= y) {
+            plotPixel(xc + x, yc + y, style, count);
+            plotPixel(xc - x, yc + y, style, count);
+            plotPixel(xc + x, yc - y, style, count);
+            plotPixel(xc - x, yc - y, style, count);
+            plotPixel(xc + y, yc + x, style, count);
+            plotPixel(xc - y, yc + x, style, count);
+            plotPixel(xc + y, yc - x, style, count);
+            plotPixel(xc - y, yc - x, style, count);
+
+            if (d < 0) {
+                d += 4 * x + 6;
+            } else {
+                d += 4 * (x - y) + 10;
+                y--;
+            }
+            x++;
+        }
+        printCanvas();
+    }
+
+    // Midpoint circle algorithm
+    static void midpointCircle(int xc, int yc, int r, int style) {
+        clearCanvas();
+        Counter count = new Counter();
+
+        int x = 0, y = r;
+        int d = 1 - r;
+        while (x <= y) {
+            plotPixel(xc + x, yc + y, style, count);
+            plotPixel(xc - x, yc + y, style, count);
+            plotPixel(xc + x, yc - y, style, count);
+            plotPixel(xc - x, yc - y, style, count);
+            plotPixel(xc + y, yc + x, style, count);
+            plotPixel(xc - y, yc + x, style, count);
+            plotPixel(xc + y, yc - x, style, count);
+            plotPixel(xc - y, yc - x, style, count);
+
+            if (d < 0) {
+                d += 2 * x + 3;
+            } else {
+                d += 2 * (x - y) + 5;
+                y--;
+            }
+            x++;
+        }
+        printCanvas();
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println("Circle Drawing Algorithms Menu:");
+        System.out.println("1. DDA Circle");
+        System.out.println("2. Bresenham's Circle");
+        System.out.println("3. Midpoint Circle");
+        System.out.println("4. Exit");
+
+        while (true) {
+            System.out.print("\nEnter your choice: ");
+            int choice = sc.nextInt();
+
+            if (choice == 4) break;
+
+            System.out.print("Enter center coordinates (x y) (0 to " + (SIZE - 1) + "): ");
+            int xc = sc.nextInt();
+            int yc = sc.nextInt();
+
+            System.out.print("Enter radius (max " + (SIZE / 2) + "): ");
+            int r = sc.nextInt();
+
+            if (xc < 0 || xc >= SIZE || yc < 0 || yc >= SIZE || r <= 0 || r > SIZE / 2) {
+                System.out.println("Invalid input, please enter valid coordinates and radius.");
+                continue;
+            }
+
+            System.out.println("Choose style:");
+            System.out.println("0. Solid");
+            System.out.println("1. Dotted");
+            System.out.println("2. Dashed");
+            System.out.print("Enter style: ");
+            int style = sc.nextInt();
+
+            if (style < 0 || style > 2) {
+                System.out.println("Invalid style. Using solid by default.");
+                style = 0;
+            }
+
+            switch (choice) {
+                case 1:
+                    ddaCircle(xc, yc, r, style);
+                    break;
+                case 2:
+                    bresenhamCircle(xc, yc, r, style);
+                    break;
+                case 3:
+                    midpointCircle(xc, yc, r, style);
+                    break;
+                default:
+                    System.out.println("Invalid choice!");
+            }
+        }
+
+        System.out.println("Program terminated.");
+        sc.close();
+    }
+}
